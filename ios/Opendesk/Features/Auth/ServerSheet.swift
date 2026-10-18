@@ -1,15 +1,15 @@
 import SwiftUI
 
-/// Choose the server: opendesk Cloud, a self-hosted address, or (debug
+/// Choose the server: Entropy88 (the default), a self-hosted address, or (debug
 /// builds) this Mac's dev stack. Checks `/config.json` and `/v1/auth/config`
 /// and says plainly when push or App Attest isn't available there.
 struct ServerSheet: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.dismiss) private var dismiss
 
-    enum Choice: Hashable { case cloud, selfHosted, local }
+    enum Choice: Hashable { case entropy88, selfHosted, local }
 
-    @State private var choice: Choice = .cloud
+    @State private var choice: Choice = .entropy88
     @State private var address = ""
     @State private var checking = false
     @State private var error: String?
@@ -19,12 +19,12 @@ struct ServerSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Text("Use opendesk Cloud, or the address your team's server runs at.")
+                    Text("Use Entropy88, or the address your team's own server runs at.")
                         .font(ODFont.callout)
                         .foregroundStyle(Theme.fg3)
 
                     Panel {
-                        option(.cloud, title: "opendesk Cloud", subtitle: "opendesk.sh", symbol: "cloud")
+                        option(.entropy88, title: "Entropy88", subtitle: "entropy88.com", symbol: "building.2")
                         Hairline(inset: 50)
                         option(.selfHosted, title: "Self-hosted", subtitle: "Your own opendesk server", symbol: "server.rack")
                         #if DEBUG
@@ -79,8 +79,8 @@ struct ServerSheet: View {
                 return
             }
             #endif
-            if current.isCloud {
-                choice = .cloud
+            if current.isDefault {
+                choice = .entropy88
             } else {
                 choice = .selfHosted
                 address = current.displayHost
@@ -114,8 +114,8 @@ struct ServerSheet: View {
         defer { checking = false }
         do {
             switch choice {
-            case .cloud:
-                found = (Instance.cloud, try await InstanceResolver().authConfig(for: Instance.cloud.apiURL))
+            case .entropy88:
+                found = (Instance.entropy88, try await InstanceResolver().authConfig(for: Instance.entropy88.apiURL))
             case .selfHosted:
                 found = try await InstanceResolver().resolve(address)
             case .local:

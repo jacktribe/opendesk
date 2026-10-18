@@ -23,7 +23,7 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>opendesk connects to a development or self-hosted server on your local network.</string>
+	<string>Entropy88 connects to a development or self-hosted server on your local network.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Geist-Regular.ttf</string>

@@ -72,8 +72,8 @@ final class OAuthSignIn: NSObject, ASWebAuthenticationPresentationContextProvidi
     }
 }
 
-/// Passkey sign-in with the platform authenticator. Offered only on Cloud,
-/// where the app is associated with the RP host (`webcredentials:app.opendesk.sh`).
+/// Passkey sign-in with the platform authenticator. Offered only on Entropy88,
+/// where the app is associated with the RP host (`webcredentials:entropy88.com`).
 @MainActor
 final class PasskeySignIn: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     enum Failure: LocalizedError {
