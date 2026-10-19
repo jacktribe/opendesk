@@ -8,7 +8,7 @@ enum AuthRoute: Hashable {
 }
 
 /// Sign-in: the server, then every way the server offers (OAuth providers,
-/// passkeys on Cloud, email and password), then 2FA or account linking.
+/// passkeys on Entropy88, email and password), then 2FA or account linking.
 struct AuthFlowView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var path: [AuthRoute] = []
@@ -171,7 +171,7 @@ struct SignInView: View {
                 Text(session.instance.displayHost)
                     .font(ODFont.sans(14, weight: .medium))
                     .foregroundStyle(Theme.fg)
-                Text(session.instance.isCloud ? "Cloud" : "Self-hosted")
+                Text(session.instance.isDefault ? "Entropy88" : "Self-hosted")
                     .font(ODFont.sans(11.5, weight: .medium))
                     .foregroundStyle(Theme.fg3)
                     .padding(.horizontal, 6)
@@ -251,7 +251,7 @@ struct SignInView: View {
         defer { busy = nil }
         do {
             let begin = try await session.beginPasskey()
-            let credential = try await passkey.assert(options: begin.options, fallbackRP: session.instance.appOrigin.host() ?? "app.opendesk.sh")
+            let credential = try await passkey.assert(options: begin.options, fallbackRP: session.instance.appOrigin.host() ?? "entropy88.com")
             let outcome = try await session.finishPasskey(token: begin.passkeyToken, credential: credential)
             route(outcome)
         } catch PasskeySignIn.Failure.cancelled {

@@ -21,7 +21,7 @@ final class SessionStore {
     }
 
     private(set) var phase: Phase = .launching
-    private(set) var instance: Instance = Preferences.instance ?? .cloud
+    private(set) var instance: Instance = Preferences.instance ?? .entropy88
     private(set) var authConfig: AuthConfig?
     private(set) var authConfigError: String?
     private(set) var user: User?
@@ -48,7 +48,7 @@ final class SessionStore {
         if let raw = AppInfo.debugValue("OPENDESK_DEBUG_SERVER") {
             if raw == "local" { return .localDev }
             if let origin = try? InstanceResolver.normalize(raw) {
-                if origin == Instance.cloudAppOrigin { return .cloud }
+                if origin == Instance.defaultAppOrigin { return .entropy88 }
                 if let api = AppInfo.debugValue("OPENDESK_DEBUG_API").flatMap(URL.init(string:)) {
                     return Instance(appOrigin: origin, apiURL: api, gatewayURL: AppInfo.debugValue("OPENDESK_DEBUG_GATEWAY").flatMap(URL.init(string:)), selfHosted: true)
                 }
@@ -56,7 +56,7 @@ final class SessionStore {
             }
         }
         #endif
-        return Preferences.instance ?? .cloud
+        return Preferences.instance ?? .entropy88
     }
 
     private func installSignedOutHandler() {

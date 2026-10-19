@@ -1,21 +1,22 @@
 import Foundation
 
-/// One opendesk server: Cloud or a self-hosted instance, chosen at runtime
+/// One opendesk server: Entropy88 (the default) or a self-hosted instance, chosen at runtime
 /// (contracts/native.md "Finding an instance").
 struct Instance: Codable, Hashable, Sendable {
-    /// Where the web app lives (`https://app.opendesk.sh`, or the self-host's one domain).
+    /// Where the web app lives (`https://entropy88.com`, or the self-host's one domain).
     var appOrigin: URL
     var apiURL: URL
     var gatewayURL: URL?
     var selfHosted: Bool
 
-    static let cloudAppOrigin = URL(string: "https://app.opendesk.sh")!
+    static let defaultAppOrigin = URL(string: "https://entropy88.com")!
 
-    static let cloud = Instance(
-        appOrigin: cloudAppOrigin,
-        apiURL: URL(string: "https://api.opendesk.sh")!,
-        gatewayURL: URL(string: "wss://gateway.opendesk.sh/socket"),
-        selfHosted: false
+    /// Entropy88: one domain, API on the origin and the gateway at `/socket`.
+    static let entropy88 = Instance(
+        appOrigin: defaultAppOrigin,
+        apiURL: defaultAppOrigin,
+        gatewayURL: URL(string: "wss://entropy88.com/socket"),
+        selfHosted: true
     )
 
     #if DEBUG
@@ -28,14 +29,13 @@ struct Instance: Codable, Hashable, Sendable {
     )
     #endif
 
-    var isCloud: Bool { appOrigin.host() == Self.cloudAppOrigin.host() && !selfHosted }
+    var isDefault: Bool { appOrigin.host() == Self.defaultAppOrigin.host() }
 
-    /// Passkeys need the app associated with the RP host: only Cloud's.
-    var passkeysSupported: Bool { isCloud }
+    /// Passkeys need the app associated with the RP host: only Entropy88's.
+    var passkeysSupported: Bool { isDefault }
 
     /// The address as people type it.
     var displayHost: String {
-        if isCloud { return "opendesk.sh" }
         var host = appOrigin.host() ?? appOrigin.absoluteString
         if let port = appOrigin.port { host += ":\(port)" }
         return host
@@ -82,7 +82,7 @@ enum InstanceError: LocalizedError, Equatable {
 struct InstanceResolver: Sendable {
     var session: URLSession = .shared
 
-    /// `opendesk.sh`, `help.acme.com`, `https://desk.acme.com/inbox` → an origin.
+    /// `entropy88.com`, `help.acme.com`, `https://desk.acme.com/inbox` → an origin.
     static func normalize(_ raw: String) throws -> URL {
         var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw InstanceError.empty }
@@ -96,8 +96,8 @@ struct InstanceResolver: Sendable {
               host.contains(".") || host == "localhost"
         else { throw InstanceError.invalid }
 
-        if ["opendesk.sh", "www.opendesk.sh", "app.opendesk.sh"].contains(host) {
-            return Instance.cloudAppOrigin
+        if ["entropy88.com", "www.entropy88.com"].contains(host) {
+            return Instance.defaultAppOrigin
         }
 
         components.host = host
@@ -139,8 +139,8 @@ struct InstanceResolver: Sendable {
     /// (API on the same origin, gateway at `/socket`). Returns the instance and its sign-in options.
     func resolve(_ raw: String) async throws -> (Instance, AuthConfig) {
         let origin = try Self.normalize(raw)
-        if origin == Instance.cloudAppOrigin {
-            return (Instance.cloud, try await authConfig(for: Instance.cloud.apiURL))
+        if origin == Instance.defaultAppOrigin {
+            return (Instance.entropy88, try await authConfig(for: Instance.entropy88.apiURL))
         }
         var candidate = Instance(appOrigin: origin, apiURL: origin, gatewayURL: nil, selfHosted: true)
         if let runtime = try? await runtimeConfig(at: origin) {
@@ -151,7 +151,6 @@ struct InstanceResolver: Sendable {
                 candidate.gatewayURL = Self.gatewayURL(gateway, origin: origin)
             }
             candidate.selfHosted = runtime.selfHosted ?? true
-            if candidate.appOrigin.host() == Instance.cloudAppOrigin.host() { candidate.selfHosted = false }
         }
         let auth = try await authConfig(for: candidate.apiURL)
         return (candidate, auth)
@@ -184,7 +183,7 @@ struct InstanceResolver: Sendable {
         return config
     }
 
-    /// `wss://gateway.opendesk.sh/socket`, or a path on the origin (`/socket`).
+    /// `wss://entropy88.com/socket`, or a path on the origin (`/socket`).
     static func gatewayURL(_ raw: String, origin: URL) -> URL? {
         if raw.hasPrefix("ws://") || raw.hasPrefix("wss://") { return URL(string: raw) }
         guard let resolved = URL(string: raw, relativeTo: origin)?.absoluteURL,
