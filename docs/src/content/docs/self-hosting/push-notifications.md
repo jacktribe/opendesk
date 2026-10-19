@@ -82,7 +82,8 @@ Direct mode sends from your instance to APNs with your own key. Apple accepts it
 
    `APNS_KEY` is the `.p8` file, base64-encoded on one line, or its PEM text in double quotes with `\n` between lines. opendesk refuses to start with only some of `APNS_KEY`, `APNS_KEY_ID` and `APNS_TEAM_ID` set.
 3. If Turnstile is on, also accept App Attest from your build: `APP_ATTEST_APP_IDS=ABCDE12345.com.example.opendesk`.
-4. `docker compose up -d`.
+4. If your build lists your domain in its Associated Domains (`webcredentials:` and `applinks:`), set `APPLE_APP_IDS=ABCDE12345.com.example.opendesk` so the instance serves `/.well-known/apple-app-site-association` and the app can use passkeys and open links.
+5. `docker compose up -d`.
 
 Phones register with your instance, and pushes go from your instance to Apple. In direct mode the notification also shows the ticket subject. The instance needs outbound HTTPS to `api.push.apple.com` (and `api.sandbox.push.apple.com` for development builds).
 

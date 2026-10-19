@@ -269,6 +269,7 @@ Settings for the [desktop](/guides/desktop-app/) and [iPhone](/guides/iphone-app
 | `APNS_TOPIC` | `sh.opendesk.app` | The bundle id of the app that receives pushes. |
 | `APP_ATTEST_APP_IDS` | empty (off) | Comma-separated app ids (`TEAMID.bundle`) whose App Attest proofs are accepted in place of Turnstile on login, registration and password reset. Needed for the iPhone app only when Turnstile is on. |
 | `APP_ATTEST_DEVELOPMENT` | `false` | Also accept App Attest keys from development builds (run from Xcode). Leave off in production. |
+| `APPLE_APP_IDS` | empty (off) | Comma-separated app ids (`TEAMID.bundle`) served at `/.well-known/apple-app-site-association`. Set it for an iPhone app you build with this domain in its Associated Domains, so that app can use passkeys and open links here. Empty, the file is not served. |
 | `PUSH_RELAY_SERVE` | `false` | Cloud only: serve the push relay (`/v1/push/relay/*`) for other instances. Needs an APNs key. |
 
 Push mode follows from these: an APNs key means direct, else `PUSH_RELAY_URL` means relay, else off. `GET /v1/auth/config` reports it under `native.push`.

@@ -145,6 +145,9 @@ services:
       APNS_TEAM_ID: ${APNS_TEAM_ID:-}
       APNS_TOPIC: ${APNS_TOPIC:-sh.opendesk.app}
       APP_ATTEST_APP_IDS: ${APP_ATTEST_APP_IDS:-}
+      # Served at /.well-known/apple-app-site-association for an iPhone app
+      # build associated with this domain (links and passkeys).
+      APPLE_APP_IDS: ${APPLE_APP_IDS:-}
     volumes:
       - ${OPENDESK_DATA:-opendesk-data}:/data
     read_only: true

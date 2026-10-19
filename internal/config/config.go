@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -122,6 +123,9 @@ type Config struct {
 	// proofs on; AppAttestDevelopment also accepts development-environment keys.
 	AppAttestAppIDs      []string
 	AppAttestDevelopment bool
+	// AppleAppIDs ("TEAMID.bundle") are served in /.well-known/apple-app-site-association,
+	// associating those iPhone app builds with this host for links and passkeys.
+	AppleAppIDs []string
 	// APNs token auth. With a key this instance pushes to iPhones itself (push = direct).
 	APNsKey    string // the .p8 key, PEM or base64
 	APNsKeyID  string
@@ -433,6 +437,7 @@ func Load() (*Config, error) {
 
 		AppAttestAppIDs:      envList("APP_ATTEST_APP_IDS"),
 		AppAttestDevelopment: envBool("APP_ATTEST_DEVELOPMENT", false),
+		AppleAppIDs:          envList("APPLE_APP_IDS"),
 		APNsKey:              os.Getenv("APNS_KEY"),
 		APNsKeyID:            env("APNS_KEY_ID", ""),
 		APNsTeamID:           env("APNS_TEAM_ID", ""),
@@ -611,6 +616,9 @@ func Load() (*Config, error) {
 	if (c.APNsKey != "" || c.APNsKeyID != "" || c.APNsTeamID != "") && (strings.TrimSpace(c.APNsKey) == "" || c.APNsKeyID == "" || c.APNsTeamID == "") {
 		return nil, errors.New("APNS_KEY, APNS_KEY_ID and APNS_TEAM_ID are required together")
 	}
+	if c.AppleAppIDs, err = appleAppIDs(c.AppleAppIDs); err != nil {
+		return nil, err
+	}
 	if c.PushRelayServe && c.APNsKey == "" {
 		return nil, errors.New("PUSH_RELAY_SERVE needs an APNs key (APNS_KEY, APNS_KEY_ID, APNS_TEAM_ID)")
 	}
@@ -633,6 +641,24 @@ func Load() (*Config, error) {
 		return nil, errors.New("STRIPE_WEBHOOK_SECRET and STRIPE_PRICE_PRO are required when STRIPE_SECRET_KEY is set")
 	}
 	return c, nil
+}
+
+// appleAppID is "TEAMID.bundle": a ten character team id and a reverse DNS bundle id,
+// as deploy/cloudflare/pages/app/write-config.mjs checks APPLE_APP_IDS.
+var appleAppID = regexp.MustCompile(`^[A-Z0-9]{10}\.[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$`)
+
+// appleAppIDs checks APPLE_APP_IDS and drops repeats, keeping the order.
+func appleAppIDs(ids []string) ([]string, error) {
+	var out []string
+	for _, id := range ids {
+		if !appleAppID.MatchString(id) {
+			return nil, fmt.Errorf("APPLE_APP_IDS must be TEAMID.bundle ids, got %q", id)
+		}
+		if !slices.Contains(out, id) {
+			out = append(out, id)
+		}
+	}
+	return out, nil
 }
 
 // loadHelp reads the help center address settings.

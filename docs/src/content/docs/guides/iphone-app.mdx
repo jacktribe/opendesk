@@ -45,7 +45,7 @@ When the app asks, allow notifications. Assigned to you, mentioned, customer rep
 
 <Callout type="note" title="Passkeys work on Cloud only">
 
-A passkey belongs to a website's domain, and iOS lets an app use it only for domains that the app lists when it is built and that list the app in return. The App Store app lists `app.opendesk.sh`. It cannot list every self-hosted domain, so on your own server sign in with a password, a provider or SSO.
+A passkey belongs to a website's domain, and iOS lets an app use it only for domains that the app lists when it is built and that list the app in return. The App Store app lists `app.opendesk.sh`. It cannot list every self-hosted domain, so on your own server sign in with a password, a provider or SSO. A build of the app you make yourself can list your domain; the server then sets `APPLE_APP_IDS` to that build's app id (see [Configuration reference](/self-hosting/configuration/#native-apps)).
 
 </Callout>
 
