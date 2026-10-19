@@ -775,7 +775,11 @@ with a key derived from `AUTH_SECRET` and checked against
 a public https address. An own APNs key (`APNS_KEY`, `APNS_KEY_ID`,
 `APNS_TEAM_ID`, `APNS_TOPIC`) sends directly instead, and only reaches an app
 built and signed by that key's team. With Turnstile on, `APP_ATTEST_APP_IDS`
-lets the iPhone app pass the human check with App Attest. The docs page
+lets the iPhone app pass the human check with App Attest. An app built with this
+domain in its Associated Domains (`webcredentials:` and `applinks:`) also needs
+`APPLE_APP_IDS` (`<team id>.<bundle id>`, comma-separated): opendesk then serves
+`https://<domain>/.well-known/apple-app-site-association`, which lets that app
+use passkeys and open links on this domain. The docs page
 "Push notifications" (self-hosting) has the details.
 
 **Help center addresses.** Without more setup each brand's help center is at

@@ -150,9 +150,15 @@ the desktop app through realtime events. The iPhone app sends people to the web 
 ### Passkeys
 
 The WebAuthn RP ID is the app host. The iPhone app offers passkeys only where the app is
-associated with that host: Cloud (`webcredentials:app.opendesk.sh`, served in
-`/.well-known/apple-app-site-association` on the app origin). Self-hosted instances sign in
-with password, OAuth or SSO in the app.
+associated with that host: the build lists `webcredentials:<host>` in its Associated Domains,
+and the host lists the build's `TEAMID.bundle` in `/.well-known/apple-app-site-association`.
+Cloud serves that file from the Pages build (`webcredentials:app.opendesk.sh`). A self-hosted
+instance serves it from the binary when `APPLE_APP_IDS` is set, so an app built for that
+domain offers passkeys there. The file has `applinks` for the paths the app opens
+(`/inbox/*/?*`, `/views/*/?*`) and `webcredentials` for the same app ids, is sent with
+`Content-Type: application/json` and `Cache-Control: public, max-age=3600`, and is not found
+without `APPLE_APP_IDS`. The App Store app lists only `app.opendesk.sh`, so on other
+self-hosted instances it signs in with password, OAuth or SSO.
 
 ## Push (iPhone)
 
@@ -313,4 +319,4 @@ type UpdateState =
 | `APNS_KEY`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_TOPIC` | API | APNs token auth; with a key, push = direct |
 | `PUSH_RELAY_URL` | API (self-hosted) | relay origin; without an APNs key, push = relay |
 | `PUSH_RELAY_SERVE` | API (Cloud) | serve `/v1/push/relay/*` (needs an APNs key) |
-| `APPLE_APP_IDS` | Pages build | app ids written into `apple-app-site-association` |
+| `APPLE_APP_IDS` | Pages build (Cloud), API (self-hosted) | comma-separated `TEAMID.bundle` app ids in `/.well-known/apple-app-site-association` (links and passkeys); the Pages build writes the file, the API serves it; empty serves none |

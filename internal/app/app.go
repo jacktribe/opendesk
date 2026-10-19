@@ -164,12 +164,9 @@ func Router(d *deps.Deps) http.Handler {
 	resolver := &auth.Resolver{Pool: d.DB.Pool, Tokens: d.Tokens, ClientIP: httpx.ClientIP(cfg.TrustProxy)}
 	r.Use(resolver.Middleware, idempotency.New(d.DB.Pool, d.Box, cfg.AuthSecret, d.Log).Middleware)
 
-	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/problem+json")
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte(`{"status":404,"title":"Not Found","code":"not_found","detail":"No route matches ` + r.Method + ` ` + strings.ReplaceAll(r.URL.Path, `"`, ``) + `"}`))
-	})
+	r.NotFound(notFound)
 	mountHealth(r, d)
+	r.Get(appSiteAssociationPath, appSiteAssociationHandler(cfg.AppleAppIDs))
 
 	hc := huma.DefaultConfig("opendesk API", version.Version)
 	hc.Info.Description = "The opendesk public API. The opendesk web app uses exactly this API."
@@ -199,6 +196,12 @@ func Router(d *deps.Deps) http.Handler {
 			MailboxIMAP: cfg.MailboxIMAP, HelpDomain: cfg.HelpDomain}, csp))
 	}
 	return r
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(http.StatusNotFound)
+	_, _ = w.Write([]byte(`{"status":404,"title":"Not Found","code":"not_found","detail":"No route matches ` + r.Method + ` ` + strings.ReplaceAll(r.URL.Path, `"`, ``) + `"}`))
 }
 
 // uploadMemory covers the largest upload body (an import CSV: 50 MB and its

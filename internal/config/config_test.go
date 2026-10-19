@@ -188,3 +188,24 @@ func TestMailboxIMAPDefault(t *testing.T) {
 		t.Fatal("MAILBOX_IMAP=false")
 	}
 }
+
+func TestAppleAppIDs(t *testing.T) {
+	productionEnv(t)
+	c, err := Load()
+	if err != nil || len(c.AppleAppIDs) != 0 {
+		t.Fatalf("default: %v %q", err, c.AppleAppIDs)
+	}
+	t.Setenv("APPLE_APP_IDS", " RX9M3639SF.com.entropy88.app, ABCDE12345.sh.opendesk.app,RX9M3639SF.com.entropy88.app ,")
+	if c, err = Load(); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(c.AppleAppIDs, ",") != "RX9M3639SF.com.entropy88.app,ABCDE12345.sh.opendesk.app" {
+		t.Fatalf("AppleAppIDs = %q", c.AppleAppIDs)
+	}
+	for _, bad := range []string{"sh.opendesk.app", "abcde12345.sh.opendesk.app", "ABCDE12345", "ABCDE12345.app"} {
+		t.Setenv("APPLE_APP_IDS", bad)
+		if _, err := Load(); err == nil || !strings.Contains(err.Error(), "APPLE_APP_IDS") {
+			t.Fatalf("%q: want refusal, got %v", bad, err)
+		}
+	}
+}
